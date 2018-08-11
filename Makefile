@@ -12,7 +12,7 @@
 
 NAME := 	libftprintf.a
 
-SRC :=		ft_printf.c ft_itoa_base.c
+SRC :=		ft_printf.c ft_itoa_base.c ft_atoi_base.c
 
 OBJ =		$(SRC:.c=.o)
 
@@ -20,7 +20,7 @@ LIBFT =			$(LIBFT_DIR)libft.a
 LIBFT_DIR :=	libft/
 LIBFT_FLAGS :=	-lft -L $(LIBFT_DIR)
 
-CC_FLAGS :=		-Wall -Werror -Wextra
+CC_FLAGS :=		
 
 LINK_FLAGS :=	$(LIBFT_FLAGS)
 

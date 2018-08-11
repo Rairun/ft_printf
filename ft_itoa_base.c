@@ -12,28 +12,93 @@
 
 #include "ft_printf.h"
 
-unsigned long	ft_pow(unsigned long nb, int pow)
+static int		ft_itoa_base_length(uintmax_t value, int base)
 {
-	if (pow == 0)
-		return (1);
-	else
-		return (nb * ft_pow(nb, pow - 1));
+	uintmax_t	nb;
+
+	nb = 1;
+	while (value >= (uintmax_t)base)
+	{
+		value /= base;
+		nb++;
+	}
+	return (nb);
 }
 
-char			*ft_itoa_base(unsigned long value, int base)
+static char		ft_itoa_hexa(int nb)
 {
-	int		i;
-	char	*nbr;
+	if (nb >= 0 && nb <= 9)
+		return ('0' + nb);
+	else
+		return ('a' + nb - 10);
+}
 
-	i = 1;
-	while (ft_pow(base, i) - 1 < value)
-		i++;
-	nbr = (char*)malloc(sizeof(nbr) * i);
-	nbr[i] = '\0';
-	while (i-- > 0)
+static intmax_t	ft_itoa_prep(intmax_t value, int base, int *sign)
+{
+	intmax_t	nb;
+
+	nb = 0;
+	if (base == 10 && value < 0)
 	{
-		nbr[i] = (value % base) + (value % base > 9 ? 'a' - 10 : '0');
-		value = value / base;
+		*sign = 1;
+		nb = value * -1;
 	}
-	return (nbr);
+	else
+	{
+		if (value < 0)
+			nb = (unsigned int)(value * -1);
+		else
+			nb = value;
+	}
+	return (nb);
+}
+
+char			*ft_itoa_base(intmax_t value, int base)
+{
+	int				sign;
+	char			*str;
+	intmax_t		nb;
+	int				length;
+	int				i;
+
+	if (base > 16 || base < 2)
+		return (NULL);
+	sign = 0;
+	if (base == 10 && value < -9223372036854775807)
+		return (ft_strdup("-9223372036854775808"));
+	nb = ft_itoa_prep(value, base, &sign);
+	length = ft_itoa_base_length(nb, base);
+	str = (char*)malloc(sizeof(char) * (length + sign + 1));
+	str[length + sign] = '\0';
+	i = length + sign - 1;
+	while (i >= 0)
+	{
+		str[i] = ft_itoa_hexa(nb % base);
+		nb = nb / base;
+		i--;
+	}
+	if (sign)
+		str[0] = '-';
+	return (str);
+}
+
+char			*ft_uitoa_base(uintmax_t value, int base)
+{
+	char			*str;
+	int				length;
+	int				i;
+
+	if (base > 16 || base < 2)
+		return (NULL);
+	length = ft_itoa_base_length(value, base);
+	str = (char*)malloc(sizeof(char) * (length + 1));
+	str[length] = '\0';
+	i = length - 1;
+	while (i >= 0)
+	{
+		str[i] = ft_itoa_hexa(value % base);
+		value = value / base;
+		i--;
+	}
+	return (str);
 }

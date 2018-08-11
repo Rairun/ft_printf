@@ -12,90 +12,103 @@
 
 #include "ft_printf.h"
 
-int		get_numbers(long long nbr)
+bool	is_flag(char c)
 {
-	int i;
-
-	i = (nbr == 0) ? 1 : 0;
-	while (nbr != 0)
-	{
-		i++;
-		nbr /= 10;
-	}
-	return (i);
+	return (ft_strchr("#0-+ ", c) != NULL);
 }
 
-int		get_format(char *fmt, t_types *t, va_list ap)
+bool	is_spec(char c)
 {
-	int n;
+	return (ft_strchr("hljz", c) != NULL);
+}
 
-	n = 0;
-	fmt++;
-	if (*fmt == '%')
+bool	is_small(char c)
+{
+	return (ft_strchr("spdiouxc", c) != NULL);
+}
+
+bool	is_big(char c)
+{
+	return (ft_strchr("SDOUXC", c) != NULL);
+}
+
+void	putf(char c, t_buff *b)
+{
+	if (b->size >= BUFF)
 	{
-		ft_putchar('%');
-		n++;
+		ft_putstr(b->buff);
+		ft_strclr(b->buff);
+		b->size = 0;
 	}
-	else if (*fmt == 's')
+	b->buff[b->size] = c;
+	b->size++;
+	b->len++;
+}
+
+void	putfstr(char *s, size_t len, t_buff *b)
+{
+	size_t	i;
+
+	i = 0;
+	while (s[i] && i < len)
 	{
-		t->s = va_arg(ap, char *);
-		n = ft_strlen(t->s);
-		ft_putstr(t->s);
-		// ft_strdel(&t->s);
+		putf(s[i], b);
+		i++;
 	}
-	else if (*fmt == 'p')
+}
+
+void	get_all(char *s, t_pf *pf)
+{
+	get_flags();
+	get_width();
+	get_prec();
+	get_size();
+	get_conv();
+}
+
+void	get_format(char *s, va_list *ap, int *i, t_buff *b)
+{
+	int		start;
+	t_pf	pf;
+
+	(*i)++;
+	start = *i;
+	while (s[*i] && s[*i] != '%' && !is_small(s[*i]) && !is_big(s[*i]))
+		(*i)++;
+	if (s[*i] == '%' || is_small(s[*i]) || is_big(s[*i]))
+		get_all(ft_strsub(s, start, *i - start + 1), &pf);
+	else
+		putfstr(s + start, *i - start, b);
+}
+
+void	parse_string(char *fmt, va_list *ap, t_buff *b)
+{
+	int		i;
+
+	i = -1;
+	while (fmt[++i])
 	{
-		t->v = va_arg(ap, void *);
-		t->lu = (unsigned long)(t->v);
-		t->s = ft_itoa_base(t->lu, 16);
-		n = ft_strlen(t->s) + 2;
-		ft_putstr("0x");
-		ft_putstr(t->s);
-		ft_strdel(&t->s);
+		if (fmt[i] == '%')
+			get_format(fmt, ap, &i, b);
+		else
+			putf(fmt[i], b);
 	}
-	else if (*fmt == 'd' || *fmt == 'i')
-	{
-		t->d = va_arg(ap, int);
-		n = get_numbers(t->d);
-		ft_putnbr(t->d);
-	}
-	else if (*fmt == 'o' || *fmt == 'u' || *fmt == 'x')
-	{
-		t->d = va_arg(ap, unsigned int);
-		if (*fmt == 'o')
-			t->s = ft_itoa_base(t->d, 8);
-		else if (*fmt == 'u')
-			t->s = ft_itoa_base(t->d, 10);
-		else if (*fmt == 'x')
-			t->s = ft_itoa_base(t->d, 16);
-		n = ft_strlen(t->s);
-		ft_putstr(t->s);
-		ft_strdel(&t->s);
-	}
-	return (n);
 }
 
 int		ft_printf(char *fmt, ...)
 {
-	int		n;
 	va_list	ap;
-	t_types	t;
+	t_buff	*b;
 
-	n = 0;
+	if ((b = ft_memalloc(sizeof(t_buff))) == NULL)
+		ft_putendl("Error malloc t_buff");
+	if ((b->buff = ft_memalloc(sizeof(char) * BUFF)) == NULL)
+		ft_putendl("Error malloc b->buff");
+	b->size = 0;
+	b->len = 0;
 	va_start(ap, fmt);
-	while (*fmt)
-	{
-		if (*fmt == '%')
-		{
-			n += get_format(fmt, &t, ap);
-			fmt++;
-		}
-		else
-		{
-			ft_putchar(*fmt);
-			n++;
-		}
-		fmt++;
-	}
-	return (n);
+	parse_string(fmt, &ap, b);
+	va_end(ap);
+	ft_putstr(b->buff);
+	return (b->len);
 }

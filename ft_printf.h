@@ -13,19 +13,54 @@
 #ifndef FT_PRINTF_H
 # define FT_PRINTF_H
 
-#include <stdarg.h>
+# include <wchar.h>
+# include <stdarg.h>
+# include <stdbool.h>
 # include "get_next_line.h"
-
-typedef struct  s_types
+# define BUFF 80
+enum			e_conv
 {
-	int				d;
-	unsigned long	lu;
-	char			c;
-	char			*s;
-	void			*v;
-}               t_types;
+	d,
+	c,
+	pr
+};
 
-int     ft_printf(char *fmt, ...);
-char	*ft_itoa_base(unsigned long value, int base);
+enum			e_size
+{
+	hh,
+	h,
+	l,
+	ll,
+	j,
+	z
+};
+
+enum			e_flag
+{
+	hash,
+	zero,
+	plus,
+	minus,
+	space
+};
+
+typedef	struct	s_buff
+{
+	char		*buff;
+	int			size;
+	int			len;
+}				t_buff;
+
+typedef struct	s_pf
+{
+	bool		flags[5];
+	bool		conv[15];
+	bool		size[6];
+}				t_pf;
+
+int				ft_printf(char *fmt, ...);
+long			ft_atoi_base(char *str, int base);
+char			*ft_itoa_base(intmax_t value, int base);
+char			*ft_uitoa_base(uintmax_t value, int base);
 
 #endif

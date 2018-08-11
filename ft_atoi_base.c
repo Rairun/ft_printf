@@ -10,73 +10,49 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "fdf.h"
+#include "ft_printf.h"
 
-static int	ft_number(char a)
+static int		ft_isdigit1(int c)
 {
-	int ret;
-
-	ret = 0;
-	if (a >= '0' && a <= '9')
-		ret = a - '0';
-	else if (a == 'a' || a == 'A')
-		ret = 10;
-	else if (a == 'b' || a == 'B')
-		ret = 11;
-	else if (a == 'c' || a == 'C')
-		ret = 12;
-	else if (a == 'd' || a == 'D')
-		ret = 13;
-	else if (a == 'e' || a == 'E')
-		ret = 14;
-	else if (a == 'f' || a == 'F')
-		ret = 15;
-	else
-		ret = -1;
-	return (ret);
+	if (c >= '0' && c <= '9')
+		return (1);
+	return (0);
 }
 
-static int	ft_check(const char *str, int str_base)
+static int		ft_verif(char *str, int *i, int sign)
 {
-	int i;
-
-	i = 0;
-	if (str[i] == '-')
-		i++;
-	while (str[i] != '\0')
-	{
-		if (ft_number(str[i]) >= str_base || ft_number(str[i]) == -1)
-		{
-			i--;
-			break ;
-		}
-		i++;
-	}
-	str[i] == '\0' ? i -= 1 : 0;
-	return (i);
+	while (str[*i] == ' ' || str[*i] == '\n' || str[*i] == '\t' ||
+			str[*i] == '\v' || str[*i] == '\f' || str[*i] == '\r')
+		(*i)++;
+	if (str[*i] == '-')
+		sign = -1;
+	else if (str[*i] == '+')
+		sign = 1;
+	return (sign);
 }
 
-int			ft_atoi_base(const char *str, int str_base)
+ssize_t			ft_atoi_base(char *str, int base)
 {
-	int	i;
-	int	flag;
-	int	res;
-	int	mem;
+	int			i;
+	ssize_t		res;
+	int			sign;
 
 	i = 0;
 	res = 0;
-	flag = 1;
-	if (!str)
-		return (0);
-	mem = ft_check(str, str_base);
-	if (str[0] == '-')
-		flag = -1;
-	while (mem >= 0 && str[mem] != '-')
+	sign = ft_verif(str, &i, 1);
+	while (ft_isdigit1(str[i]) == 1 || (str[i] <= 'f' && str[i] >= 'a') ||
+			(str[i] <= 'F' && str[i] >= 'A'))
 	{
-		res += pow(str_base, i) * ft_number(str[mem]);
+		if (str[i] == '\0')
+			return (res);
+		res *= base;
+		if (ft_isdigit1(str[i]) == 1)
+			res += (str[i] - '0') * base;
+		else if (str[i] <= 'f' && str[i] >= 'a')
+			res += (str[i] - 'a' + 10) * base;
+		else if (str[i] <= 'F' && str[i] >= 'A')
+			res += (str[i] - 'A' + 10) * base;
 		i++;
-		mem--;
 	}
-	flag == -1 ? res = res * flag : 0;
-	return (res);
+	return (sign * (res /= base));
 }
